@@ -12,33 +12,45 @@ struct PThreadhdl
 };
 
 JThread::JThread()
+:hThread(NULL)
 {
 	
 }
 
 JThread::~JThread()
 {
-	
+	if(hThread!=NULL)
+		delete hThread;
 }
-
+/*
+*这里重新定以一个void*的函数，作为pthread_create函数的参数传递进去
+*context作为类对象传进来，然后调用routine函数执行相应的内容
+*/
+static void* OS_Thread_Proc_Linux(void* param)
+{
+	JThread* thrd = (JThread*) param;
+	thrd->routine();
+	return NULL;
+}
 int JThread::run()
 {
-#if 1
-	if(pthread_create(NULL,
-						NULL,
-						NULL,
-						NULL)){
+	if(this->hThread== NULL)
+		this->hThread = new PThreadhdl;
+	/* 记得第一个参数是指针的形式*/
+	if(pthread_create(&(this->hThread->pthrdhdl),
+						NULL,OS_Thread_Proc_Linux,this)<0){
+		delete this->hThread;
+		this->hThread = NULL;
 		printf("\r\n Create thread failed!\n");
 		return -1;					
 	}
-#endif
 	return 0;
 }
 
 
 void JThread::Join(JThread& thrd)
 {
-	pthread_join(NULL,NULL);
+	pthread_join(thrd.hThread->pthrdhdl,NULL);
 }
 
 void JThread::Sleep(int s)
