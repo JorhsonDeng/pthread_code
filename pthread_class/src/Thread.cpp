@@ -1,4 +1,4 @@
-#include"JThread.h"
+#include"Thread.h"
 /*
 *现在一直出现pthread.h文件中的一些变量和函数未定义的情况
 *eg:pthread_t, pthread_create,pthread_join, 不知道为什么一直提示找不到！
@@ -11,13 +11,13 @@ struct PThreadhdl
 	pthread_t pthrdhdl;
 };
 
-JThread::JThread()
+Thread::Thread()
 :hThread(NULL)
 {
 	
 }
 
-JThread::~JThread()
+Thread::~Thread()
 {
 	if(hThread!=NULL)
 		delete hThread;
@@ -28,11 +28,11 @@ JThread::~JThread()
 */
 static void* OS_Thread_Proc_Linux(void* param)
 {
-	JThread* thrd = (JThread*) param;
+	Thread* thrd = (Thread*) param;
 	thrd->routine();
 	return NULL;
 }
-int JThread::run()
+int Thread::run()
 {
 	if(this->hThread== NULL)
 		this->hThread = new PThreadhdl;
@@ -48,17 +48,17 @@ int JThread::run()
 }
 
 
-void JThread::Join(JThread& thrd)
+void Thread::Join(Thread& thrd)
 {
 	pthread_join(thrd.hThread->pthrdhdl,NULL);
 }
 
-void JThread::Sleep(int s)
+void Thread::Sleep(int s)
 {
 	::sleep(1);
 }
 
-void JThread::Msleep(int ms)
+void Thread::Msleep(int ms)
 {
 	//::usleep(ms * 1000);
 	// 好像使用nanosleep更好
@@ -69,7 +69,7 @@ void JThread::Msleep(int ms)
 	nanosleep(&ts, NULL);
 }
 
-int JThread::routine()
+int Thread::routine()
 {
 	return 0;
 }
