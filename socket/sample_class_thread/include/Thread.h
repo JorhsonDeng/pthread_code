@@ -1,10 +1,16 @@
 #ifndef _Thread_H
 #define _Thread_H
 #include <pthread.h>
+#include <semaphore.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <list>
+#include <iostream>
+using namespace std;
+
+#define True 1
 
 struct PThreadhdl;
 class Thread
@@ -32,5 +38,66 @@ private:
 	struct PThreadhdl* hThread;
 	
 };
+
+class Sema
+{
+public:
+	Sema();
+	~Sema();
+	bool wait();	//等待信号量
+	bool post();	//增加信号量
+//private:
+	sem_t sem;
+};
+
+
+
+class Mutex
+{
+public:
+	Mutex();
+	~Mutex();
+	bool lock();
+	bool unlock();
+private:
+	pthread_mutex_t mutex; 
+};
+
+
+/*
+void server_hdl(TcpSocket *pconnsocket)
+{
+    printf("\r\n server_hdl is running...\n");
+    TcpSocket *connsocket = pconnsocket;
+    char request[1024];
+    int rel;
+	while(!exit_flag){
+        char buf[520]; 
+		const char *clientip = (*connsocket).sockaddr.GetIp_str().c_str();
+        int clientport = (*connsocket).sockaddr.GetPort();
+        sprintf(buf,"%s:%d receive ok!",clientip,clientport);
+        memset(request,'\0',sizeof(request));             
+        rel = (*connsocket).Recv(request,1024,0);  //这里用 connsocket与客户端进行通信，而不是 tcpsocket变量          
+        request[strlen(request)+1]='\0';                
+        printf("receive buf: %d:%s\n",rel,request);  
+        if(rel <= 0)
+            break;              
+        int s = (*connsocket).Send(buf,strlen(buf));//发送响应                
+        printf("send=%d\n",s);                
+        if(strcmp(request,"end") == 0){
+            printf("\r\n will exiting...\n");
+            break;                
+        }
+	}
+    (*connsocket).Close(); 
+    free(connsocket);   //关闭socket之后，记得释放所占用的资源 
+}
+*/
+/*
+*多重继承派生类的构造函数问题：
+*派生类构造函数名(总参数列表):基类1构造函数(参数表),基类3构造函数(参数表),基类4构造函数(参数表)
+*{派生类中新增数据成员初始化变量}
+*/
+
 
 #endif

@@ -8,6 +8,7 @@
 #include"Socket.h"
 #include<iostream>
 #include"Thread.h"
+#include"Server.h"
 
 int exit_flag = 0;
 #define MAX_SIZE 1024
@@ -30,8 +31,11 @@ void server_hdl(TcpSocket *pconnsocket)
         rel = (*connsocket).Recv(request,1024,0);  //这里用 connsocket与客户端进行通信，而不是 tcpsocket变量          
         request[strlen(request)+1]='\0';                
         printf("receive buf: %d:%s\n",rel,request);  
-        if(rel <= 0)
-            break;              
+        if(rel <= 0){
+            printf("%s:%d receive close!",clientip,clientport);
+            break;
+        }
+                      
         int s = (*connsocket).Send(buf,strlen(buf));//发送响应                
         printf("send=%d\n",s);                
         if(strcmp(request,"end") == 0){
@@ -55,14 +59,14 @@ void server_hdl(TcpSocket *pconnsocket)
 *派生类构造函数名(总参数列表):基类1构造函数(参数表),基类3构造函数(参数表),基类4构造函数(参数表)
 *{派生类中新增数据成员初始化变量}
 */
-class ServerThread:public Thread
+class ServerThread
 {
 public:
     ServerThread(){}
     void set(TcpSocket *tcpsocket){
         ptcpsocket = tcpsocket;
     }
-	virtual int routine() //这里的virtual可加可不加了，也是虚函数！
+	int doit() 
 	{
         if(ptcpsocket == NULL){
             printf("\r\n the tcpsocket pointer is NULL!\n");
@@ -76,25 +80,6 @@ public:
     TcpSocket *ptcpsocket = NULL;
 };
 
-class myThread:public Thread
-{
-public:
-    void set(int i){
-        num = i;
-    }
-	//virtual int routine() //这里的virtual可加可不加了，也是虚函数！
-	int routine()
-	{
-		while(!exit_flag){
-			printf("\r\n myThread %d is running...\n",num);
-			Thread::Sleep(1);
-		}
-		printf("\r\n myThread is exiting...\n");
-		return 0;
-	}
-    int num;
-};
-
 using namespace std;
 const int port = 8888;
 int main(int argc,char *argv[])
@@ -104,17 +89,6 @@ int main(int argc,char *argv[])
         printf("need two canshu\n");        
         return 1;    
     }    
-#if 0
-    for(int i=0;i<6;i++){
-        myThread *thrd = new(myThread);
-        (*thrd).set(i);
-	    (*thrd).run(); 
-        ::sleep(1);
-    }
-    getchar();
-	exit_flag = 1;
-    return 0;
-#endif
     int sock;    
     int connfd;   
     /* 创建一个SockAddr对象，用于存放地址*/
@@ -128,13 +102,15 @@ int main(int argc,char *argv[])
     assert(ret != -1); 
   
     ret = (*tcpsocket).Listen(10);
-    assert(ret != -1);   
+    assert(ret != -1); 
+    Server<ServerThread> Myserver(1,100);  
+
     ServerThread *srvThd;
     while(1)    
     {       
         TcpSocket *connsocket = new(TcpSocket); //每有一个新的连接，都会new一个新的TcpSocket对象，用来与客户端进行通信
         (*tcpsocket).Accept(connsocket);       
-         
+         cout<<"receive a connection!!!"<<endl;
         printf("\r\n client addr =%s, client port = %d\n",(*connsocket).sockaddr.GetIp_str().c_str(),(*connsocket).sockaddr.GetPort());
         if(connfd<0)         
         {            
@@ -143,10 +119,9 @@ int main(int argc,char *argv[])
             /*这里创建的资源并没有进行释放，后面需要继续处理一下！*/
             /*这里需要用一个向量或者链表，对这个指针进行处理，判断如果当前的描述符关闭的话，则直接认为这个线程死掉了*/
             srvThd = new(ServerThread);
-            printf("serThd = %p",srvThd);
-            (*srvThd).set(connsocket);
-            printf("\r\n start run function!\n");
-            (*srvThd).run(); //
+            srvThd->set(connsocket);
+            //cout<<"Add the requestion!!!"<<endl;
+            Myserver.addrequest(srvThd);
         }    
     }                    
     printf("\r\n exiting.......\n");

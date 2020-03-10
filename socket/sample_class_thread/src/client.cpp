@@ -14,8 +14,10 @@
 #include "Socket.h"
 using namespace std;
 
+int exit_flag = 0;
 const int port = 8888;
 #define BUF_SIZE 1000
+#define True 1
 int main()
 {
     int clientfd;    
@@ -29,8 +31,8 @@ int main()
     *这里面最重要的是clientfd这个句柄，这个句柄作为一个变量保存在Socket对象中了，因此再次调用的时候
     *直接调用相应的methods即可，不用再关系内部的一些细节。
     */
-    while(true){  
-        TcpSocket tcpclient;
+    TcpSocket tcpclient;
+    while(!exit_flag){  
         clientfd = tcpclient.Open();
         assert(clientfd>=0);
 
@@ -41,22 +43,28 @@ int main()
             close(clientfd); //关闭套接字                   
             return -1;      
         }
-        
-        cout<<"please input the string you want send!"<<endl;
-        memset(sendbuf,'\0',sizeof(sendbuf));
+        while(True){
+            cout<<"please input the string you want send!"<<endl;
+            memset(sendbuf,'\0',sizeof(sendbuf));
 
-        cin>>sendbuf;
+            cin>>sendbuf;
 
-        int s = tcpclient.Send(sendbuf,strlen(sendbuf));
-        printf("\r\n we have send data length is %d",s);
-        tcpclient.Recv(recvbuf,BUF_SIZE-2);
-        recvbuf[BUF_SIZE-1] = '\0';
-        printf("\r\n we have recv：%s \n",recvbuf);
-        tcpclient.Close();
-        //::sleep(1);
-        if(strcmp(sendbuf,"end") == 0){
-            break;
+            int s = tcpclient.Send(sendbuf,strlen(sendbuf));
+            printf("\r\n we have send data length is %d",s);
+            memset(recvbuf,'\0',sizeof(sendbuf));
+            tcpclient.Recv(recvbuf,BUF_SIZE-2);
+            recvbuf[BUF_SIZE-1] = '\0';
+            printf("\r\n we have recv：%s \n",recvbuf);
+            //::sleep(1);
+            if(strcmp(sendbuf,"end") == 0){
+                break;
+            }
+            if(strcmp(sendbuf,"exit") == 0){
+                exit_flag = 1;
+                break;
+            }
         }
+        tcpclient.Close();
     }
     printf("\r\nclient exiting ...\n");
     return 0;

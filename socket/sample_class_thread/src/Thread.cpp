@@ -76,3 +76,48 @@ int Thread::routine()
 	return 0;
 }
 
+
+
+Sema::Sema()
+{
+	//create semaphore
+	if(sem_init(&sem,0,0) != 0){
+		throw std::exception();
+	}
+}
+Sema::~Sema()
+{
+	sem_destroy(&sem);
+}
+
+bool Sema::wait()
+{
+	return sem_wait(&sem) == 0;
+}
+
+bool Sema::post()
+{
+	return sem_post(&sem) == 0;
+}
+
+
+Mutex::Mutex()
+{
+	//initialize the mutex variable!
+	if(pthread_mutex_init(&mutex,NULL) !=0)
+		throw std::exception();
+}
+Mutex::~Mutex()
+{
+	pthread_mutex_destroy(&mutex);
+}
+bool Mutex::lock()
+{
+	return pthread_mutex_lock(&mutex) == 0;
+}
+bool Mutex::unlock()
+{
+	return pthread_mutex_unlock(&mutex) == 0;
+}
+
+
